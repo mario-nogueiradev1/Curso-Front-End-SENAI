@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Missão Geometria</title>
+    <link rel="stylesheet" href="pibid.css">
+</head>
+<body>
+
+<!-- =========================
+     HOME
+========================= -->
+<section id="home" class="screen active">
+    <div class="card home-card">
+
+        <h1>Missão Geometria</h1>
+        <h3>PIBID Matemática UFSC</h3>
+        <p>Criado por Mário Nogueira</p>
+
+        <p class="intro">
+            O Caderno Secreto da Geometria perdeu suas páginas...
+            Apenas um verdadeiro Explorador pode restaurá-lo.
+        </p>
+
+        <button onclick="irConfig()">Ensino Fundamental</button>
+
+        <button class="disabled"
+            title="Em construção. Aguarde minhas próximas férias.">
+            Ensino Médio (Em construção)
+        </button>
+
+    </div>
+</section>
+
+
+<!-- =========================
+     CONFIGURAÇÃO
+========================= -->
+<section id="config" class="screen">
+    <div class="card">
+
+        <h2>Escolha o nível da missão</h2>
+
+        <select id="nivel">
+            <option value="">Selecione o nível</option>
+            <option value="facil">Fácil – 6º Ano</option>
+            <option value="medio">Médio – 7º e 8º Ano</option>
+            <option value="dificil">Difícil – 9º Ano</option>
+        </select>
+
+        <div id="tutorial" class="hidden">
+
+            <h3>Sala de Preparação</h3>
+
+            <p>Você começa com 5 vidas ❤️</p>
+            <p>Errou? Perde uma vida.</p>
+            <p>Chegou a 0? Retorna para a preparação.</p>
+            <p>A cada fase avançada você pode recuperar vidas.</p>
+
+            <button onclick="ativarPronto()">Estou pronto!</button>
+
+        </div>
+
+        <button id="btnPronto" class="hidden" onclick="iniciar()">
+            Iniciar Missão
+        </button>
+
+    </div>
+</section>
+
+
+<!-- =========================
+     GAME
+========================= -->
+<section id="game" class="screen">
+
+    <!-- TOPO -->
+    <div class="topo">
+        <div id="vidas"></div>
+        <div id="faseInfo"></div>
+    </div>
+
+    <!-- NARRATIVA -->
+    <div class="narrativa-box">
+        <h3 id="tituloFase"></h3>
+        <p id="narrativa"></p>
+    </div>
+
+    <!-- DESAFIO -->
+    <div class="card desafio-box">
+
+        <p id="pergunta"></p>
+
+        <div id="opcoes"></div>
+
+        <p id="mensagem" class="mensagem-motivadora"></p>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     FINAL ÉPICO
+========================= -->
+<section id="final" class="screen">
+    <div class="card">
+
+        <h2>Missão Concluída</h2>
+
+        <p id="finalTexto"></p>
+
+        <button onclick="location.reload()">
+            Jogar Novamente
+        </button>
+
+    </div>
+</section>
+
+
+<script src="pibid.js"></script>
+
+</body>
+</html>
