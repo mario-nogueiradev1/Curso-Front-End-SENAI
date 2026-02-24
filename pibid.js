@@ -1,14 +1,13 @@
 /* =========================
-   VARIÁVEIS GLOBAIS
+    VARIÁVEIS GLOBAIS
 ========================= */
-
 let vidas = 5;
 let nivel = "";
 let bancoQuestoes = {};
 let perguntasUsadas = [];
 let perguntaAtual;
 let paginasRecuperadas = 0;
-let digitacaoAtiva = null; // controle da digitação
+let digitacaoAtiva = null; 
 
 const perguntasPorFase = 3;
 
@@ -33,20 +32,33 @@ const fasesNarrativas = [
 const palavraSecreta = "GEOMETRIA";
 
 /* =========================
-   CARREGAR JSON
+    UTILITÁRIOS (EMBARALHAMENTO)
 ========================= */
+function embaralhar(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
+/* =========================
+    CARREGAR JSON
+========================= */
 async function carregarBanco() {
-    const resposta = await fetch("pibid.json");
-    bancoQuestoes = await resposta.json();
+    try {
+        const resposta = await fetch("pibid.json");
+        bancoQuestoes = await resposta.json();
+    } catch (e) {
+        console.error("Erro ao carregar o arquivo JSON:", e);
+    }
 }
 
 window.onload = carregarBanco;
 
 /* =========================
-   TELAS
+    TELAS
 ========================= */
-
 function trocarTela(id){
     document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
     document.getElementById(id).classList.add("active");
@@ -56,9 +68,9 @@ function irConfig(){
     trocarTela("config");
 }
 
-document.getElementById("nivel").addEventListener("change",function(){
-    nivel=this.value;
-    if(nivel!==""){
+document.getElementById("nivel").addEventListener("change", function(){
+    nivel = this.value;
+    if(nivel !== ""){
         document.getElementById("tutorial").classList.remove("hidden");
     }
 });
@@ -68,33 +80,24 @@ function ativarPronto(){
 }
 
 /* =========================
-   INICIAR JOGO
+    INICIAR JOGO
 ========================= */
-
 function iniciar(){
     vidas = 5;
     perguntasUsadas = [];
     paginasRecuperadas = 0;
-
     trocarTela("game");
     carregarPergunta();
 }
 
 /* =========================
-   PEGAR PERGUNTA
+    PEGAR PERGUNTA
 ========================= */
-
 function pegarPerguntaAleatoria(){
-
     let lista = bancoQuestoes[nivel];
-
-    if(!lista || lista.length === 0){
-        alert("Sem perguntas nesse nível.");
-        return null;
-    }
+    if(!lista || lista.length === 0) return null;
 
     let disponiveis = lista.filter(p => !perguntasUsadas.includes(p));
-
     if(disponiveis.length === 0){
         perguntasUsadas = [];
         disponiveis = lista;
@@ -102,18 +105,14 @@ function pegarPerguntaAleatoria(){
 
     let pergunta = disponiveis[Math.floor(Math.random() * disponiveis.length)];
     perguntasUsadas.push(pergunta);
-
     return pergunta;
 }
 
 /* =========================
-   CARREGAR PERGUNTA + FASE
+    CARREGAR PERGUNTA + FASE
 ========================= */
-
 function carregarPergunta(){
-
     atualizarTopo();
-
     let faseAtual = Math.floor(paginasRecuperadas / perguntasPorFase);
 
     if(faseAtual >= fasesNarrativas.length){
@@ -122,95 +121,75 @@ function carregarPergunta(){
     }
 
     document.body.style.background = fasesNarrativas[faseAtual].cor;
+    document.getElementById("tituloFase").textContent = fasesNarrativas[faseAtual].titulo;
 
-    document.getElementById("tituloFase").textContent =
-        fasesNarrativas[faseAtual].titulo;
+    efeitoDigitacao(fasesNarrativas[faseAtual].texto, "narrativa", 20);
 
-    efeitoDigitacao(
-        fasesNarrativas[faseAtual].texto,
-        "narrativa",
-        20
-    );
-
-    document.getElementById("faseInfo").textContent =
-        "Desafio " +
-        ((paginasRecuperadas % perguntasPorFase) + 1) +
-        "/" + perguntasPorFase;
+    document.getElementById("faseInfo").textContent = 
+        "Desafio " + ((paginasRecuperadas % perguntasPorFase) + 1) + "/" + perguntasPorFase;
 
     perguntaAtual = pegarPerguntaAleatoria();
     if(!perguntaAtual) return;
 
-    document.getElementById("pergunta").textContent =
-        perguntaAtual.pergunta;
+    document.getElementById("pergunta").textContent = perguntaAtual.pergunta;
 
+    // LÓGICA DE EMBARALHAMENTO DAS OPÇÕES
     let opcoesDiv = document.getElementById("opcoes");
     opcoesDiv.innerHTML = "";
 
-    perguntaAtual.opcoes.forEach((op,i)=>{
-        let btn=document.createElement("button");
-        btn.textContent=op;
-        btn.onclick=()=>verificar(i);
+    // Mapeamos as opções para objetos que sabem se são a correta
+    let listaOpcoes = perguntaAtual.opcoes.map((texto, index) => {
+        return { texto: texto, correta: index === perguntaAtual.correta };
+    });
+
+    // Embaralhamos a lista antes de criar os botões
+    embaralhar(listaOpcoes);
+
+    listaOpcoes.forEach(op => {
+        let btn = document.createElement("button");
+        btn.textContent = op.texto;
+        btn.onclick = () => verificarResposta(op.correta, btn);
         opcoesDiv.appendChild(btn);
     });
 }
 
 /* =========================
-   VERIFICAR RESPOSTA
+    VERIFICAR RESPOSTA (CORRIGIDA)
 ========================= */
-
-function verificar(indiceEscolhido) {
-
-    let botoes = document.querySelectorAll("#opcoes button");
-
-    if (indiceEscolhido === perguntaAtual.correta) {
-
-        botoes[indiceEscolhido].classList.add("botao-correto");
+function verificarResposta(eCorreta, botaoClicado) {
+    if (eCorreta) {
+        botaoClicado.classList.add("botao-correto");
         document.querySelector(".desafio-box").classList.add("acerto");
 
         criarConfete();
         mostrarMensagem();
-
         paginasRecuperadas++;
-
         if (vidas < 5) vidas++;
 
         setTimeout(() => {
             document.querySelector(".desafio-box").classList.remove("acerto");
             carregarPergunta();
         }, 900);
-
     } else {
-
         vidas--;
-        document.getElementById("mensagem").textContent =
-            "O símbolo enfraquece... você perdeu uma vida.";
+        botaoClicado.style.backgroundColor = "#ff4444"; // Feedback visual imediato de erro
+        document.getElementById("mensagem").textContent = "O símbolo enfraquece... você perdeu uma vida.";
 
         if (vidas <= 0) {
             alert("O caderno se fecha antes que o segredo seja revelado.");
             trocarTela("config");
         }
     }
-
     atualizarTopo();
 }
 
 /* =========================
-   FINAL ÉPICO
+    FINAL & ESTÉTICA
 ========================= */
-
 function finalizarMissao(){
     trocarTela("final");
-
-    efeitoDigitacao(
-        "O símbolo final brilha intensamente...\nA palavra revelada é: " + palavraSecreta,
-        "finalTexto",
-        35
-    );
+    efeitoDigitacao("O símbolo final brilha intensamente...\nA palavra revelada é: " + palavraSecreta, "finalTexto", 35);
 }
-
-/* =========================
-   MENSAGENS
-========================= */
 
 const mensagens = [
     "O código reage à sua inteligência!",
@@ -224,10 +203,6 @@ function mostrarMensagem() {
     msg.textContent = mensagens[Math.floor(Math.random() * mensagens.length)];
 }
 
-/* =========================
-   CONFETE
-========================= */
-
 function criarConfete() {
     for (let i = 0; i < 20; i++) {
         const confete = document.createElement("div");
@@ -238,30 +213,16 @@ function criarConfete() {
     }
 }
 
-/* =========================
-   VIDAS
-========================= */
-
 function atualizarTopo(){
-    document.getElementById("vidas").textContent="❤️ ".repeat(vidas);
+    document.getElementById("vidas").textContent = "❤️ ".repeat(vidas);
 }
-
-/* =========================
-   EFEITO DIGITAÇÃO (CORRIGIDO E ROBUSTO)
-========================= */
 
 function efeitoDigitacao(texto, elementoId, velocidade = 25){
     const elemento = document.getElementById(elementoId);
-
-    if (digitacaoAtiva) {
-        clearTimeout(digitacaoAtiva);
-    }
-
+    if (digitacaoAtiva) clearTimeout(digitacaoAtiva);
     elemento.textContent = "";
-
     const caracteres = [...texto];
     let i = 0;
-
     function digitar(){
         if(i < caracteres.length){
             elemento.textContent += caracteres[i];
@@ -269,6 +230,5 @@ function efeitoDigitacao(texto, elementoId, velocidade = 25){
             digitacaoAtiva = setTimeout(digitar, velocidade);
         }
     }
-
     digitar();
 }
