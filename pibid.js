@@ -9,7 +9,7 @@ let perguntaAtual;
 let paginasRecuperadas = 0;
 let digitacaoAtiva = null; 
 
-const perguntasPorFase = 3;
+const perguntasPorFase = 5;
 
 const fasesNarrativas = [
     {
