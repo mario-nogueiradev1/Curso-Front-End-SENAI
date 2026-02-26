@@ -94,17 +94,30 @@ function iniciar(){
     PEGAR PERGUNTA
 ========================= */
 function pegarPerguntaAleatoria(){
+
     let lista = bancoQuestoes[nivel];
     if(!lista || lista.length === 0) return null;
 
-    let disponiveis = lista.filter(p => !perguntasUsadas.includes(p));
+    let faseAtual = Math.floor(paginasRecuperadas / perguntasPorFase);
+
+    let totalFases = fasesNarrativas.length;
+    let tamanhoBloco = Math.floor(lista.length / totalFases);
+
+    let inicio = faseAtual * tamanhoBloco;
+    let fim = inicio + tamanhoBloco;
+
+    let perguntasDaFase = lista.slice(inicio, fim);
+
+    let disponiveis = perguntasDaFase.filter(p => !perguntasUsadas.includes(p));
+
     if(disponiveis.length === 0){
         perguntasUsadas = [];
-        disponiveis = lista;
+        disponiveis = perguntasDaFase;
     }
 
     let pergunta = disponiveis[Math.floor(Math.random() * disponiveis.length)];
     perguntasUsadas.push(pergunta);
+
     return pergunta;
 }
 
@@ -138,8 +151,8 @@ function carregarPergunta(){
     opcoesDiv.innerHTML = "";
 
     // Mapeamos as opções para objetos que sabem se são a correta
-    let listaOpcoes = perguntaAtual.opcoes.map((texto, index) => {
-        return { texto: texto, correta: index === perguntaAtual.correta };
+    let listaOpcoes = perguntaAtual.alternativas.map((texto, index) => {
+    return { texto: texto, correta: index === perguntaAtual.resposta };
     });
 
     // Embaralhamos a lista antes de criar os botões
